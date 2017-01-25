@@ -6,8 +6,6 @@ uart_control
 ---
 Allows auto configuration of UART. UART is normally used by the console on Raspberry Pi 0, 1 and 2. On Raspberry Pi 3, UART is used by the Bluetooth module and console is assigned to a software based UART known as mini UART. Many custom boards require access to UART via GPIO pins 14 and 15. This requires a set of configuration changes that differ per platform. This command line utility allows making UART available to custom applications.
 
-You can see the status of UART with the status option:
-
 ```
 $ sudo ./uart_control
 Usage:
@@ -17,6 +15,8 @@ Usage:
       status  Displays current status
 $
 ```
+
+You can see the status of UART with the status option:
 ```
 $ sudo ./uart_control status
 Console  : disabled
