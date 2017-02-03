@@ -1,0 +1,96 @@
+#!/usr/bin/python
+from datetime import datetime, tzinfo, timedelta
+from tornado import websocket, web, ioloop
+import importlib
+import json
+import os
+import threading
+
+PORT = 1923
+client_list = []
+
+class simple_utc(tzinfo):
+    def tzname(self):
+        return 'UTC'
+    def utcoffset(self, dt):
+        return timedelta(0)
+
+class SocketHandler(websocket.WebSocketHandler):
+    '''
+    Web Socket for sending the messages.
+    '''
+    def check_origin(self, origin):
+        return True
+
+    def open(self):
+        timestamp = datetime.utcnow().replace(tzinfo=simple_utc()).isoformat()
+        data = {'name': 'signalk-server',
+                'version': '0.0.1',
+                'timestamp': timestamp,
+                'self': 'self'}
+        self.write_message(json.dumps(data))
+        if self not in client_list:
+            client_list.append(self)
+
+    def on_close(self):
+        if self in client_list:
+            client_list.remove(self)
+
+    def on_message(self, message):
+        pass
+
+class BoatSensor(object):
+    '''
+    Main class
+    '''
+    def __init__(self):
+        '''
+        All plugins under ./plugins directory will be automatically loaded and
+        initialized.
+        '''
+        self.lock = threading.Lock()
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        for root, dirs, files in os.walk(os.path.join(base_dir, 'plugins')):       
+            for file in files:
+                if file.endswith(".py") and file != '__init__.py':
+                    plugin_file = 'plugins.' + file.replace('.py', '')
+                    plugin = importlib.import_module(plugin_file).plugin(self)
+                    if plugin.enabled:
+                        # Each plugin is run on its own thread
+                        thread = threading.Thread(target=plugin.start)
+                        thread.daemon = True
+                        thread.start()
+
+    def emit(self, values):
+        '''
+        Called by individual plugins to emit messages via the websocket
+        Note that while this mimicks the Signal K format, full implementation
+        is not Signal K compatible as it doesn't provide the heartbeats,
+        server identification etc.
+        '''
+        timestamp = datetime.utcnow().replace(tzinfo=simple_utc()).isoformat()
+        self.lock.acquire()
+        data = {
+          'context': 'vessels.self',
+          'updates': [{
+             'timestamp': timestamp,
+             'source': 'sources.boatsensord',
+             'values': values
+          }]
+        } 
+        for client in client_list:
+            client.write_message(json.dumps(data))
+        self.lock.release()
+
+    def run(self):
+        app = web.Application([
+            (r'/signalk/v1/stream', SocketHandler)
+        ])
+        app.listen(PORT)
+        ioloop.IOLoop.instance().start()
+
+if __name__ == '__main__':
+    sensord = BoatSensor()
+    print "Listening on port %d" % PORT
+    sensord.run()
+

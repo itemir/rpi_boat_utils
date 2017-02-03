@@ -1,0 +1,281 @@
+#!/usr/bin/python
+import ais
+import argparse
+import BaseHTTPServer
+import json
+import os
+import re
+import socket
+import sys
+import threading
+
+# This dictionary holds the list of boats (or floating 'objects')
+boat = {}
+
+# This dictionary holds the fragmented AIVDM messages
+fragment = {}
+
+class http_handler(BaseHTTPServer.BaseHTTPRequestHandler):
+    '''
+    This is just a simple web server we will launch on
+    localhost to serve HTML page and subsequent AJAX requests
+    '''
+    def do_GET(s):
+        ''' Respond to GET only '''
+        if s.path == '/':
+            s.send_response(200)
+            s.send_header('Content-type', 'text/html')
+            s.end_headers()
+            with open('map.html', 'r') as content_file:
+                s.wfile.write(content_file.read())
+        elif s.path == '/ais_data.json':
+            s.send_response(200)
+            s.send_header('Content-type', 'text/json')
+            s.end_headers()
+            s.wfile.write(json.dumps(boat)) 
+        else:
+            s.send_response(404)
+            s.send_header('Content-type', 'text/html')
+            s.end_headers()
+            s.wfile.write('<h1>HTTP-404</h1>')
+    def log_message(self, format, *args):
+        ''' Silence stdout messages '''
+        return
+
+def calculate_checksum(data):
+    '''
+    Copied from libais (https://github.com/schwehr/libais/blob/master/ais/stream/checksum.py)
+    Checksum is calculated by xor'ing everything between ? or ! and the *
+    '''
+
+    # FIX: strip off new line at the end too
+    if data[0]=='!' or data[0]=='?': data = data[1:]
+    if data[-1]=='*': data = data[:-1]
+    if data[-3]=='*': data = data[:-3]
+    # FIX: rename sum to not shadown builting function
+    checksum = 0
+    for c in data:
+      checksum = checksum ^ ord(c)
+    sum_hex = "%x" % checksum
+    if len(sum_hex) == 1:
+      sum_hex = '0' + sum_hex
+    return sum_hex.upper()
+
+def process_aivdm_message(data):
+    '''
+    Takes data and processes it for potential fragments
+    Returns the (message, complete, error)
+    '''
+    global fragment
+
+    if not re.match(r'\!AIVDM,', data):
+         return (None, True, 'Not an AIVDM message')
+
+    fields = data.split(',')
+    try:
+         fragment_count = int(fields[1])
+         fragment_number = int(fields[2])
+         message_id = fields[3]
+         channel = fields[4]
+         payload = fields[5]
+         (padding, checksum) = fields[6].split('*')
+    except (IndexError, ValueError):
+         return (None, True, 'Malformed AIVDM message')
+
+    padding = int(padding)
+    verify_checksum = calculate_checksum(data)
+
+    if checksum != verify_checksum:
+        ''' Checksum failure '''
+        return (None, True, 'Checksum failure')
+
+    if fragment_count == 1: 
+        ''' If no fragments message is the payload '''
+        try:
+             message = ais.decode(payload, padding)
+             return (message, True, None)
+        except ais.DecodeError:
+             return (None, True, 'AIS decode error')
+
+    if fragment_number == 1:
+        ''' Initialize the fragment, we will update it '''
+        fragment[message_id] = {'data': payload,
+                                'fragment_count': fragment_count,
+                                'fragment_number': fragment_number}
+        return (None, False, None)
+
+    if fragment.get(message_id, None) is None:
+        return (None, False, 'Uninitialized fragment')
+
+    if fragment_number > fragment_count:
+        ''' This should never happen '''
+        return (None, False, 'Fragment number/count are mismatched')
+
+    if fragment_number < fragment_count:
+        ''' Update the fragment '''
+        fragment[message_id]['data'] += payload
+        fragment[message_id]['fragment_number'] = fragment_number
+        return (None, False, None)
+
+    if fragment_number == fragment_count:
+        ''' We received all fragments '''
+        if fragment.get(message_id, None) is None:
+            ''' Fragment does not exist '''
+            return (None, False, 'Not existent fragment history') 
+        if fragment[message_id]['fragment_number'] != fragment_number-1:
+            ''' Sequence problem '''
+            return (None, False, 'Sequence problem') 
+        try:
+             message = ais.decode(fragment[message_id]['data'] + payload,
+                             padding)
+             fragment.pop(message_id)
+             return (message, True, None)
+        except ais.DecodeError:
+             return (None, True, 'AIS decode error')
+
+def process_ais_messages():
+    global boat
+
+    if cli_options.address is not None and cli_options.port is not None:
+        input_type='network'
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        try:
+            s.connect((cli_options.address, cli_options.port))
+        except socket.error:
+            print 'Error connecting to %s:%d' % (cli_options.address,
+                                                 cli_options.port)
+            os._exit(1)
+    elif cli_options.device is not None:
+        input_type='device'
+        dev = open(cli_options.device)
+
+    while True:
+        if input_type == 'network':
+            lines = s.recv(1024).strip()
+        else:
+            lines = dev.readline().strip()
+        for data in lines.split('\n'):
+            ''' Input can span multiple lines '''
+            (msg, completed, error) = process_aivdm_message(data)
+            if error is not None:
+                if cli_options.verbose:
+                    print 'Error decoding message: %s' % error
+                    print data
+            elif completed == True and msg is not None:
+                mmsi = msg['mmsi']
+                lat = msg.get('y', None)
+                lng = msg.get('x', None)
+                if lat is not None:
+                    lat = round(lat, 4)    
+                if lng is not None:
+                    lng = round(lng, 4)    
+                name = msg.get('name', None)
+                if name is not None:
+                    name = name.replace('@', '')
+                heading = msg.get('true_heading', None)
+                if heading == 511:
+                    heading = None
+                aton = msg.get('aton_type', None)
+                speed = msg.get('sog', None)
+                if speed > 102.2: # http://www.navcen.uscg.gov/?pageName=AISMessagesA
+                    speed = None
+                if speed is not None:
+                    speed = round(speed, 1) 
+                nav_status_code = msg.get('nav_status', None) 
+                if nav_status_code is not None:
+                    status = {
+                      # Statuses from http://www.navcen.uscg.gov/?pageName=AISMessagesA
+                      0: 'Under way using engine',
+                      1: 'At anchor',
+                      2: 'Not under command',
+                      3: 'Restricted maneuverability',
+                      4: 'Constrained by her draught',
+                      5: 'Moored',
+                      6: 'Aground',
+                      7: 'Engaged in fishing',
+                      8: 'Under way sailing',
+                      11: 'Power-driven vessel towing astern',
+                      12: 'Power-driven vessel pushing ahead or towing alongside',
+                    }
+                    try:
+                        nav_status = status[nav_status_code]
+                    except KeyError: 
+                        nav_status = 'Unknown (code: %d)' % nav_status_code
+                else:
+                    nav_status = None
+
+                if boat.get(mmsi, None) is None:
+                    boat[mmsi] = {
+                      'lat': lat,
+                      'lng': lng,
+                      'name': name,
+                      'heading': heading,
+                      'speed': speed,
+                      'nav_status_code': nav_status_code,
+                      'nav_status': nav_status,
+                      'aton': aton
+                    }
+                else:
+                    if lat is not None:
+                        boat[mmsi]['lat'] = lat
+                    if lng is not None:
+                        boat[mmsi]['lng'] = lng 
+                    if name is not None:
+                        boat[mmsi]['name'] = name 
+                    if heading is not None:
+                        boat[mmsi]['heading'] = heading
+                    if speed is not None:
+                        boat[mmsi]['speed'] = speed
+                    if nav_status is not None:
+                        boat[mmsi]['nav_status'] = nav_status
+                    if aton is not None:
+                        boat[mmsi]['aton'] = aton
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--device',
+                    dest='device',
+                    default=None,
+                    help='Device for accessing AIS server (i.e. /dev/ttyAMA0)')
+parser.add_argument('--address',
+                    dest='address',
+                    default=None,
+                    help='IP address of AIS server')
+parser.add_argument('--port',
+                    dest='port',
+                    type=int,
+                    default=None,
+                    help='TCP port number for AIS server')
+parser.add_argument('--http-port',
+                    dest='http_port',
+                    type=int,
+                    default=8888,
+                    help='Port number on for the HTTP server'+
+                         ' (default: 8888)')
+parser.add_argument('-v',
+                    '--verbose',
+                    dest='verbose',
+                    action='store_true',
+                    help='Enable debug messages')
+cli_options = parser.parse_args()
+
+if not cli_options.device and not cli_options.address:
+    print "You need to specify a device or an AIS server address."
+    sys.exit(1)
+
+if cli_options.device and (cli_options.address or cli_options.port):
+    print "Device and Address/Port are mutually exclusive."
+    sys.exit(1)
+
+if cli_options.address and not cli_options.port:
+    print "When you specify an address, you also need to specify a port."
+    sys.exit(1)
+
+ais_thread = threading.Thread(target=process_ais_messages)
+ais_thread.daemon = True
+ais_thread.start()
+
+httpd = BaseHTTPServer.HTTPServer(('0.0.0.0', cli_options.http_port),
+                                  http_handler)
+print 'Connect to http://%s:%d' % ('localhost', cli_options.http_port)
+while True:
+    httpd.handle_request()

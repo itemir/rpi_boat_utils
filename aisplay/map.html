@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>AISplay - AIS Visualization on Google Maps</title>
+  <meta name="description" content="AIS visualization on Google Maps - by Ilker Temir (https://github.com/itemir/aisplay)"/>
+  <script src="https://code.jquery.com/jquery-3.1.0.min.js"></script>
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+    #map {
+      height: 100%;
+      width: 100%;
+    }
+    #controller {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      width: 200px;
+      height: 165px;
+      padding: 10px;
+      border-radius: 5px;
+      color: #000;
+      background-color: #fff;
+      opacity: 0.8;
+      z-index: 99;
+    }
+  </style>
+</head>
+<body>
+  <div id='map' class='container'></div>
+  <div id='controller'>
+    <div style='font-size: 14pt; font-weight: bold; text-align: center; padding-bottom: 10px;'>
+      AISplay
+    </div>
+    <table style='width: 100%;'>
+      <tr>
+        <td>Objects:</td>
+        <td id='objectCount'>0</td>
+      </tr>
+      <tr>
+        <td>Sailing:</td>
+        <td id='sailingCount'>0</td>
+      </tr>
+      <tr>
+        <td>Motoring:</td>
+        <td id='motoringCount'>0</td>
+      </tr>
+      <tr>
+        <td>Moored:</td>
+        <td id='mooredCount'>0</td>
+      <tr>
+        <td>Anchored:</td>
+        <td id='anchoredCount'>0</td>
+      </tr>
+      <tr>
+        <td>Fastest:</td>
+        <td><a href='#' onclick='fastestObjectInfo()'><span id='fastestSpeed'>0</span> kn</a></td>
+      </tr>
+    </table>
+  </div>
+  <script>
+    var map;
+    var marker={};
+    var fastestObject={mmsi: null, speed: 0};
+
+    function getIcon(path, color, scale, rotation=null) {
+      let icon = {
+        path: google.maps.SymbolPath[path],
+        strokeColor: color,
+        strokeWeight: 2,
+        scale: scale,
+      }
+      if (rotation)
+        icon['rotation'] = rotation;
+      return icon;
+    }
+
+    function updateMap(centerMap=false) {
+      $.getJSON('ais_data.json', function(data) {
+        if (centerMap) {
+          // Set center to first object's coordinates
+          let firstRecord = data[Object.keys(data)[0]];
+          let centerLat = firstRecord['lat'];
+          let centerLng = firstRecord['lng'];
+          let centerLatLng = new google.maps.LatLng(centerLat, centerLng);
+          map.setCenter(centerLatLng);
+        }
+        for (let mmsi in data) {
+          let lat = data[mmsi]['lat'];
+          let lng = data[mmsi]['lng'];
+          let heading = data[mmsi]['heading'];
+          let aton = data[mmsi]['aton'];
+
+          if (mmsi in marker) {
+            if ((lat != marker[mmsi]['info']['lat']) ||
+                (lng != marker[mmsi]['info']['lng'])) {
+              // Save the previous location
+              let trace = new google.maps.Marker({
+                position: {
+                  lat: marker[mmsi]['info']['lat'],
+                  lng: marker[mmsi]['info']['lng']
+                },
+                icon: {
+                  path: google.maps.SymbolPath.CIRCLE,
+                  fillColor: 'green',
+                  strokeColor: 'green',
+                  strokeOpacity: 0.3, 
+                  scale: 1,
+                },
+                map: map,
+              });
+            }
+            let newLatLng = new google.maps.LatLng(lat, lng);
+            marker[mmsi]['obj'].setPosition(newLatLng);
+            let icon;
+            if (!heading)
+              if (aton)
+                icon = getIcon('CIRCLE', 'black', 5)
+              else
+                icon = getIcon('CIRCLE', 'green', 5)
+            else
+              icon = getIcon('FORWARD_CLOSED_ARROW', 'green', 3, heading);
+            marker[mmsi]['obj'].setIcon(icon);
+            marker[mmsi]['info'] = data[mmsi];
+          } else {
+            let icon;
+            if (!heading) 
+              if (aton)
+                icon = getIcon('CIRCLE', 'black', 5)
+              else 
+                icon = getIcon('CIRCLE', 'green', 5)
+            else
+              icon = getIcon('FORWARD_CLOSED_ARROW', 'green', 3, heading);
+
+            marker[mmsi] = {
+              info: data[mmsi],
+              obj: marker[mmsi] = new google.maps.Marker({
+                position: {lat: lat, lng: lng},
+                icon: icon, 
+                map: map,
+              })
+            }
+            marker[mmsi]['obj'].addListener('click', function() {
+              markerInfoPopup(mmsi);
+            });
+          }
+        } 
+        $('#objectCount').html(Object.keys(marker).length);
+        let sailingCount = 0;
+        let motoringCount = 0;
+        let anchoredCount = 0;
+        let mooredCount = 0;
+        for (key in marker) {
+          let status_code = marker[key]['info']['nav_status_code'];
+          let speed= marker[key]['info']['speed'];
+          if (speed>=fastestObject['speed']) 
+            fastestObject = {mmsi: key, speed: speed};
+          switch (status_code) {
+            case 0:
+              motoringCount++;
+              break;
+            case 1:
+             anchoredCount++;
+              break;
+            case 5:
+              mooredCount++;
+              break;
+            case 8:
+              sailingCount++;
+              break;
+          }
+        }
+        $('#sailingCount').html(sailingCount);
+        $('#motoringCount').html(motoringCount);
+        $('#anchoredCount').html(anchoredCount);
+        $('#mooredCount').html(mooredCount);
+        $('#fastestSpeed').html(fastestObject['speed']);
+      });
+    }
+
+    function markerInfoPopup(mmsi) {
+      let info = marker[mmsi]['info'];
+      let content = '';
+      if (info['name'] != null) 
+          content += '<center><h3>' + info['name'] + '</h3></center>';
+      content += '<strong>MMSI:</strong> ' + mmsi + '<br>' +
+                 '<strong>Latitude:</strong> ' + info['lat'] + '<br>' +
+                 '<strong>Longitude:</strong> ' + info['lng'];
+      if (info['heading'])
+        content += '<br><strong>Heading:</strong> ' + info['heading'] + '&deg;T';
+
+      if (info['speed']) 
+        content += '<br><strong>Speed:</strong> ' + info['speed'] + ' kn';
+ 
+      if (info['navStatus'])
+        content += '<br><strong>Status:</strong> ' + info['navStatus'];
+
+      if (info['aton'])
+        content += '<br><strong>ATON type:</strong> ' + info['aton'];
+
+      let infowindow = new google.maps.InfoWindow({
+        content: content
+      });
+      infowindow.open(map, marker[mmsi]['obj']);
+    }
+
+    function fastestObjectInfo() {
+      let mmsi = fastestObject['mmsi'];
+      if (mmsi)
+        markerInfoPopup(mmsi);
+    }
+
+    function initMap() {
+      map = new google.maps.Map(document.getElementById('map'), {
+        center: { lat: 34.597042, lng: -42.011719},
+        mapTypeId: 'hybrid',
+        zoom: 11
+      });
+      // Initil marker should reset the center
+      updateMap(true);
+        
+      // Refresh the locations every second
+      setInterval(updateMap, 1000);
+    }
+  </script>
+  <script src="https://maps.googleapis.com/maps/api/js?callback=initMap" async defer></script>
+</body>
+</html>
+
