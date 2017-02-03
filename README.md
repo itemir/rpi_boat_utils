@@ -1,54 +1,20 @@
-# Raspberry Pi Utilities
+# Boat Utilities for Raspberry Pi 
 
-Utilities for Raspberry Pi
+This repository contains a collection of utilities and tools for Raspberry Pi. They are primarily for usage on a boat, for integrating marine electronics, sensors and supporting marine protocols. That being said, some of the tools are relevant for non-boat usage (like uart_control) and some of the tools do not require to be run on a Raspberry Pi (like aisd or aisplay). 
 
-uart_control
+[uart_control](https://github.com/itemir/rpi_boat_utils/uart_control)
 ---
-Allows auto configuration of UART. UART is normally used by the console on Raspberry Pi 0, 1 and 2. On Raspberry Pi 3, UART is used by the Bluetooth module and console is assigned to a software based UART known as mini UART. Many custom boards require access to UART via GPIO pins 14 and 15. This requires a set of configuration changes that differ per platform. This command line utility allows making UART available to custom applications.
+Tool for configuring the UART on a Raspberry Pi.
 
-```
-$ sudo ./uart_control
-Usage:
-  ./uart_control [ OPTION ]
-      default Restores original state
-      gpio    Makes UART available on GPIO pins 14 & 15
-      status  Displays current status
-$
-```
+[aisd](https://github.com/itemir/rpi_boat_utils/aisd)
+---
+Daemon for making a serial or USB based AIS (Automatic Identification System) receiver wireless enabled.
 
-You can see the status of UART with the status option:
-```
-$ sudo ./uart_control status
-Console  : disabled
-UART     : enabled
-Bluetooth : enabled
+[aisplay](https://github.com/itemir/rpi_boat_utils/aisplay)
+---
+Web Service for displaying AIS vessels on a map.
 
-UART is available to GPIO 14 & 15.
-$
-```
+[sensord](https://github.com/itemir/rpi_boat_utils/sensord)
+---
+Signal K Daemon for integrating a variety of different DIY Raspberry Pi sensors to a Signal K network.
 
-gpio option makes the UART available to GPIO pins 14 and 15:
-
-```
-$ sudo ./uart_control gpio
-Enabling UART.
-Disabling console on UART.
-Disabling Bluetooth.
-Removed symlink /etc/systemd/system/multi-user.target.wants/hciuart.service.
-
-UART made available on GPIO 14 & 15.
-You now need to reboot
-$
-```
-default option changes the state back to its original:
-```
-$ sudo ./uart_control default
-Enabling UART.
-Enabling console on UART.
-Enabling Bluetooth.
-Created symlink from /etc/systemd/system/multi-user.target.wants/hciuart.service to /lib/systemd/system/hciuart.service.
-
-Default system settings restored.
-You now need to reboot.
-$
-```

@@ -1,0 +1,44 @@
+#!/usr/bin/python
+import socket
+import os
+import time
+import threading
+
+clients = set()
+clients_lock = threading.Lock()
+
+def listener(client, address):
+    print "Accepted connection from: ", address
+    with clients_lock:
+        clients.add(client)
+    try:    
+        while True:
+            pass
+    finally:
+        with clients_lock:
+            clients.remove(client)
+            client.close()
+
+def read_ais_messages():
+    while True:
+        for client in clients:
+            client.sendall('ilker')
+        time.sleep(2)
+host = "0.0.0.0"
+port = 10016
+
+s = socket.socket()
+s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+s.bind((host,port))
+s.listen(3)
+
+ais_thread = threading.Thread(target=read_ais_messages)
+ais_thread.start()
+
+th = []
+while True:
+    print "Server is listening for connections..."
+    client, address = s.accept()
+    th.append(threading.Thread(target=listener, args = (client,address)).start())
+
+s.close()
