@@ -1,4 +1,5 @@
-# aisd - Wireless AIS daemon 
+aisd - Wireless AIS daemon 
+---
 
 aisd allows making a local AIS receiver (connected over serial, USB etc. available over the network).
 
