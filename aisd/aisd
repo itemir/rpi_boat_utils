@@ -1,14 +1,17 @@
 #!/usr/bin/python
+import argparse
 import socket
 import os
-import time
 import threading
 
 clients = set()
+addresses = {}
 clients_lock = threading.Lock()
 
 def listener(client, address):
-    print "Accepted connection from: ", address
+    if cli_options.verbose:
+        print "New connection %s." % str(address)
+    addresses[client.fileno()] = address
     with clients_lock:
         clients.add(client)
     try:    
@@ -20,16 +23,38 @@ def listener(client, address):
             client.close()
 
 def read_ais_messages():
+    device = open(cli_options.device)
     while True:
+        ais_message = device.readline()
+        clients_to_remove = set()
         for client in clients:
-            client.sendall('ilker')
-        time.sleep(2)
-host = "0.0.0.0"
-port = 10016
+            try:
+                client.sendall(ais_message)
+            except (IOError, socket.error):
+                clients_to_remove.add(client)
+        for client in clients_to_remove:
+            if cli_options.verbose:
+                print "Connection dropped %s." % str(addresses[client.fileno()])
+            clients.remove(client)
+
+parser = argparse.ArgumentParser()
+parser.add_argument('device',
+                    help='Device for accessing AIS server (i.e. /dev/ttyAMA0)')
+parser.add_argument('--port',
+                    dest='port',
+                    type=int,
+                    default=1920,
+                    help='Listen on TCP port number')
+parser.add_argument('-v',
+                    '--verbose',
+                    dest='verbose',
+                    action='store_true',
+                    help='Enable debug messages')
+cli_options = parser.parse_args()
 
 s = socket.socket()
 s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-s.bind((host,port))
+s.bind(('0.0.0.0',cli_options.port))
 s.listen(3)
 
 ais_thread = threading.Thread(target=read_ais_messages)
@@ -37,7 +62,6 @@ ais_thread.start()
 
 th = []
 while True:
-    print "Server is listening for connections..."
     client, address = s.accept()
     th.append(threading.Thread(target=listener, args = (client,address)).start())
 
