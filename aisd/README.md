@@ -22,3 +22,5 @@ Escape character is '^]'.
 !AIVDM,1,1,,A,D03Ovk06AN>40Hffp00Nfp0,2*52
 !AIVDM,1,1,,A,D03Ovk@6mN>40Tffp00Nfp0,2*12
 ```
+
+Applications that support AIS access over the network (like iNavX, aisplay or OpenCPN) can use the service using the given address and port.
