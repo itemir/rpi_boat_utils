@@ -50,6 +50,7 @@ def read_ais_messages():
     while True:
         ais_message = device.readline()
         clients_to_remove = set()
+        clients_lock.acquire()
         for client in clients:
             try:
                 client.sendall(ais_message)
@@ -59,6 +60,7 @@ def read_ais_messages():
             if cli_options.verbose:
                 print "Connection dropped %s." % str(addresses[client.fileno()])
             clients.remove(client)
+        clients_lock.release()
 
 parser = argparse.ArgumentParser()
 parser.add_argument('device',
