@@ -257,47 +257,22 @@ do
     exit 1
     ;;
   status)
-    RED="\033[1;31m"
-    GREEN="\033[1;32m"
-    UBLACK='\033[4;30m' 
-    NC="\033[0m" # No Color
-
     console=$(console_status)
     uart=$(uart_status)
     bluetooth=$(bluetooth_status)
 
-    printf "Console  : "
-    if [ "$console" = enabled ]; then
-      printf "${RED}"
-    else
-      printf "${GREEN}"
-    fi
-    printf "$console${NC}\n"
-
-    printf "UART     : "
-    if [ "$uart" = enabled ]; then
-      printf "${GREEN}"
-    else
-      printf "${RED}"
-    fi
-    printf "$uart${NC}\n"
-
-    printf "Bluetooth : "
-    if [ "$bluetooth" = enabled ]; then
-      printf "${RED}"
-    else
-      printf "${GREEN}"
-    fi
-    printf "$uart${NC}\n"
+    printf "Console   : $console\n"
+    printf "UART      : $uart\n"
+    printf "Bluetooth : $bluetooth\n"
 
     if [ "$console" = disabled ] && \
        [ "$uart" = enabled ] && \
        [ "$bluetooth" != enabled ]; then
       printf "\n"
-      printf "UART is ${UBLACK}available${NC} to GPIO 14 & 15.\n"
+      printf "UART is available to GPIO 14 & 15.\n"
     else
       printf "\n"
-      printf "UART is ${UBLACK}NOT available${NC} to GPIO 14 & 15.\n"
+      printf "UART is NOT available$ to GPIO 14 & 15.\n"
     fi 
     exit 1
     ;;

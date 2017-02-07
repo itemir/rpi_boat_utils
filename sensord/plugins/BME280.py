@@ -1,9 +1,10 @@
+# sensord plugin (c) 2016 by Ilker Temir
+#
 # Copyright (c) 2014 Adafruit Industries
 # Author: Tony DiCola
 #
 # Based on the BMP280 driver with BME280 changes provided by
 # David J Taylor, Edinburgh (www.satsignal.eu)
-# BoatSensorD changes added by Ilker Temir
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -211,8 +212,6 @@ class BME280(object):
         elif h < 0:
             h = 0
         return h
-
-sensor = BME280(mode=BME280_OSAMPLE_8)
 
 class BME280Plugin(BasePlugin):
     name = 'Temperature, Pressure and Humidity Sensor Plugin'
