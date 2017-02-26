@@ -1,7 +1,7 @@
 AISplay
 ===
 
-<img src='https://raw.githubusercontent.com/itemir/aisplay/master/screenshot.png' align='left' width='450' hspace='10' vspace='10'>
+<img src='https://raw.githubusercontent.com/itemir/rpi_boat_utils/master/aisplay/screenshot.png' align='left' width='450' hspace='10' vspace='10'>
 AISplay is a Python example for visualizing [Automatic Identification System](https://en.wikipedia.org/wiki/Automatic_identification_system)
 (AIS) messages for marine traffic. It uses [libais](https://github.com/schwehr/libais) to decode AIS and
 [NMEA](https://en.wikipedia.org/wiki/NMEA_0183) messages and visualizes traffic on Google Maps. 
