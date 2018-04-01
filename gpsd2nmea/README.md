@@ -1,7 +1,7 @@
 gpsd2nmea - A daemon for making gpsd messages available for NMEA receivers
 ---
 
-[gpsd](http://www.catb.org/gpsd/) is a service daemon that monitors one or more GPSes or AIS receivers attached to a host computer through serial or USB ports, making them available to be queried on TCP port 2947 of the host computer. It is very handy to link GPS or AIS receivers but not all clients support it directly. For example OpenCPN does support it but iNavx and iSailor doesn't. They do require raw NMEA sentences over wifi/network.
+[gpsd](http://www.catb.org/gpsd/) is a service daemon that monitors one or more GPSes or AIS receivers attached to a host computer through serial or USB ports, making them available to be queried on TCP port 2947 of the host computer. It is very handy to link GPS or AIS receivers but not all clients support it directly. For example OpenCPN does support it but iNavX and iSailor don't. They do require raw NMEA sentences over wifi/network.
 
 gpsd2nmea bridges that gap. It can connect to a gpsd server and translate the messages to raw NMEA to sentences, so clients that do not support gpsd can connect.
 
