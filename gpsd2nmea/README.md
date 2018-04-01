@@ -10,7 +10,7 @@ Usage:
 ./gpsd2nmea --gpsd-server 192.168.100.1 & 
 ```
 
-With above example multiple end points can access the data over port 2948. You can specify port numbers as well, see the help.
+With above example multiple end points can access the data over port 2948.
 
 ```
 $ ./gpsd2nmea --gpsd-server 192.168.100.1 &
@@ -37,3 +37,20 @@ Connection closed.
 $
 ```
 
+You can specify port numbers as well, see the help.
+
+```
+$ ./gpsd2nmea -h
+usage: gpsd2nmea [-h] [--gpsd-server GPSD_SERVER] [--gpsd-port GPSD_PORT]
+                 [--port PORT] [-v]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --gpsd-server GPSD_SERVER
+                        gpsd server address (default: 127.0.0.1)
+  --gpsd-port GPSD_PORT
+                        gpsd port number (default: 2947)
+  --port PORT           Listen on TCP port number (default: 2948)
+  -v, --verbose         Enable debug messages
+$
+```
