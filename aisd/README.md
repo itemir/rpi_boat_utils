@@ -1,7 +1,9 @@
 aisd - Wireless AIS daemon 
 ---
 
-aisd allows making a local AIS receiver (connected over serial, USB etc. available over the network).
+NOTE: This code is now obsolete and unmaintained. It is left here as a reference only. To make a local AIS receiver network capable, use [gpsd](http://www.catb.org/gpsd/) instead. If your endpoint does not support gpsd natively, you can use [gpsd2nmea](https://github.com/itemir/rpi_boat_utils/tree/master/gpsd2nmea) to translate messages to raw NMEA messages.
+
+aisd allows making a local AIS receiver (connected over serial, USB etc.) available over the network.
 
 Usage:
 ```
