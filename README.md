@@ -2,11 +2,15 @@
 
 This repository contains a collection of utilities and tools for Raspberry Pi. They are primarily for usage on a boat, for integrating marine electronics, sensors and marine protocols.
 
-That being said, some of the utilities are relevant for non-boat usage (like uart_control) and some of the utilities do not require to be run on a Raspberry Pi (like aisd or aisplay). 
+That being said, some of the utilities are relevant for non-boat usage (like uart_control) and some of the utilities do not require to be run on a Raspberry Pi (like gpsd2nmea, aisd or aisplay). 
 
 [uart_control](https://github.com/itemir/rpi_boat_utils/tree/master/uart_control)
 ---
 Tool for configuring the UART on a Raspberry Pi.
+
+[gpsd2nmea](https://github.com/itemir/rpi_boat_utils/tree/master/gpsd2nmea)
+---
+Daemon for translating gpsd messages to raw NMEA messages to be used in iNavX, iSailor etc.
 
 [aisd](https://github.com/itemir/rpi_boat_utils/tree/master/aisd)
 ---
