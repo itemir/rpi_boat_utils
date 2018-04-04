@@ -1,4 +1,4 @@
-# Boat Utilities for Raspberry Pi 
+# Boat and Raspberry Pi Utilities
 
 This repository contains a collection of utilities and tools for Raspberry Pi. They are primarily for usage on a boat, for integrating marine electronics, sensors and marine protocols.
 
