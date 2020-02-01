@@ -215,7 +215,7 @@ class BME280(object):
 
 class BME280Plugin(BasePlugin):
     name = 'Temperature, Pressure and Humidity Sensor Plugin'
-    enabled = True
+    enabled = False
     def init(self):
         self.sensor = BME280(mode=BME280_OSAMPLE_8)
 
