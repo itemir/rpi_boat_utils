@@ -24,8 +24,8 @@ Web Service for displaying AIS vessels on a map.
 ---
 Signal K Daemon for integrating a variety of different DIY Raspberry Pi sensors to a Signal K network.
 
-[aisd](https://github.com/itemir/rpi_boat_utils/tree/master/aisd) (Obsolete)
+[aisd](https://github.com/itemir/rpi_boat_utils/tree/master/aisd)
 ---
-Daemon for making a serial or USB based AIS (Automatic Identification System) receiver wireless enabled.
+(Unmaintained / Obsolete) Daemon for making a serial or USB based AIS (Automatic Identification System) receiver wireless enabled.
 
 
