@@ -12,9 +12,9 @@ Tool for configuring the UART on a Raspberry Pi.
 ---
 Daemon for translating gpsd messages to raw NMEA messages to be used in iNavX, iSailor etc.
 
-[aisd](https://github.com/itemir/rpi_boat_utils/tree/master/aisd)
+[monitoringd](https://github.com/itemir/rpi_boat_utils/tree/master/monitoringd)
 ---
-Daemon for making a serial or USB based AIS (Automatic Identification System) receiver wireless enabled.
+Daemon for retrieving pressure, temperature and humidity from a BME280 based sensor and storing them in InfluxDB, for visualizing on a Grafana dashboard.
 
 [aisplay](https://github.com/itemir/rpi_boat_utils/tree/master/aisplay)
 ---
@@ -23,4 +23,9 @@ Web Service for displaying AIS vessels on a map.
 [sensord](https://github.com/itemir/rpi_boat_utils/tree/master/sensord)
 ---
 Signal K Daemon for integrating a variety of different DIY Raspberry Pi sensors to a Signal K network.
+
+[aisd](https://github.com/itemir/rpi_boat_utils/tree/master/aisd) (Obsolete)
+---
+Daemon for making a serial or USB based AIS (Automatic Identification System) receiver wireless enabled.
+
 
