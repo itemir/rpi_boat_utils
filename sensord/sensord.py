@@ -22,45 +22,16 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from datetime import datetime, tzinfo, timedelta
-from tornado import websocket, web, ioloop
 import importlib
 import json
 import os
+import socket
+import sys
 import threading
+import time
 
 PORT = 1923
 client_list = []
-
-class simple_utc(tzinfo):
-    def tzname(self):
-        return 'UTC'
-    def utcoffset(self, dt):
-        return timedelta(0)
-
-class SocketHandler(websocket.WebSocketHandler):
-    '''
-    Web Socket for sending the messages.
-    '''
-    def check_origin(self, origin):
-        return True
-
-    def open(self):
-        timestamp = datetime.utcnow().replace(tzinfo=simple_utc()).isoformat()
-        data = {'name': 'signalk-server',
-                'version': '0.0.1',
-                'timestamp': timestamp,
-                'self': 'self'}
-        self.write_message(json.dumps(data))
-        if self not in client_list:
-            client_list.append(self)
-
-    def on_close(self):
-        if self in client_list:
-            client_list.remove(self)
-
-    def on_message(self, message):
-        pass
 
 class BoatSensor(object):
     '''
@@ -86,34 +57,20 @@ class BoatSensor(object):
 
     def emit(self, values):
         '''
-        Called by individual plugins to emit messages via the websocket
-        Note that while this mimicks the Signal K format, full implementation
-        is not Signal K compatible as it doesn't provide the heartbeats,
-        server identification etc.
+        Called by individual plugins to emit messages
         '''
-        timestamp = datetime.utcnow().replace(tzinfo=simple_utc()).isoformat()
-        self.lock.acquire()
-        data = {
-          'context': 'vessels.self',
-          'updates': [{
-             'timestamp': timestamp,
-             'source': 'sources.boatsensord',
-             'values': values
-          }]
-        } 
-        for client in client_list:
-            client.write_message(json.dumps(data))
-        self.lock.release()
+	data = '{"updates":[{"$source":"sensord","values":%s}]}' % json.dumps(values)
+        self.sock.sendto(data.encode('utf-8'), ('127.0.0.1', PORT))
 
     def run(self):
-        app = web.Application([
-            (r'/signalk/v1/stream', SocketHandler)
-        ])
-        app.listen(PORT)
-        ioloop.IOLoop.instance().start()
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        while True:
+            try:
+                time.sleep(0.5)
+            except KeyboardInterrupt:
+                sys.exit()
 
 if __name__ == '__main__':
     sensord = BoatSensor()
-    print "Listening on port %d" % PORT
     sensord.run()
 

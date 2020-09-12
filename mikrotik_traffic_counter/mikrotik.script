@@ -1,0 +1,14 @@
+:local lte1rx "lte1-rx"
+:local lte1tx "lte1-tx"
+:local lte2rx "lte2-rx"
+:local lte2tx "lte2-tx"
+:local lte1rxbytes [/ip firewall mangle get [/ip firewall mangle find comment="$lte1rx"] bytes]
+:local lte1txbytes [/ip firewall mangle get [/ip firewall mangle find comment="$lte1tx"] bytes]
+:local lte2rxbytes [/ip firewall mangle get [/ip firewall mangle find comment="$lte2rx"] bytes]
+:local lte2txbytes [/ip firewall mangle get [/ip firewall mangle find comment="$lte2tx"] bytes]
+:log info ("Submitting traffic statistics")
+/tool fetch url=("http://192.168.6.252/\?lte1-rx=$lte1rxbytes&lte1-tx=$lte1txbytes&lte2-rx=$lte2rxbytes&lte2-tx=$lte2txbytes") mode=http keep-result=no
+/ip firewall mangle reset-counters [/ip firewall mangle find comment="$lte1rx"]
+/ip firewall mangle reset-counters [/ip firewall mangle find comment="$lte1tx"]
+/ip firewall mangle reset-counters [/ip firewall mangle find comment="$lte2rx"]
+/ip firewall mangle reset-counters [/ip firewall mangle find comment="$lte2tx"]

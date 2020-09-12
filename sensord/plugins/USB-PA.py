@@ -3,6 +3,7 @@ import time
 import serial
 
 DEVICE = '/dev/ttyACM1'
+COUNTER = 5
 
 class TestPlugin(BasePlugin):
     name = 'Plugin for USB-PA (http://dogratian.com/products/index.php/menu-sensors/menu-usb-pa-type-a-bmp085)'
@@ -23,7 +24,7 @@ class TestPlugin(BasePlugin):
 
             self.boat_sensord.emit([
               {
-                'path': 'environment.outside.temperature',
+                'path': 'environment.inside.temperature',
                 'value': temperature
               },
               {
@@ -37,6 +38,6 @@ class TestPlugin(BasePlugin):
             ])
 
             # Emit every X seconds
-            time.sleep(15)
+            time.sleep(COUNTER)
 
 plugin = TestPlugin
