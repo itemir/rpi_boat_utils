@@ -12,6 +12,10 @@ Tool for configuring the UART on a Raspberry Pi.
 ---
 Daemon for translating gpsd messages to raw NMEA messages to be used in iNavX, iSailor etc.
 
+[Mikrotik Traffic Counter](https://github.com/itemir/rpi_boat_utils/tree/master/mikrotik_traffic_counter)
+---
+Code and instructions for measuring traffic consumed on Mikrotik routers.
+
 [monitoringd](https://github.com/itemir/rpi_boat_utils/tree/master/monitoringd)
 ---
 Daemon for retrieving pressure, temperature and humidity from a BME280 based sensor and storing them in InfluxDB, for visualizing on a Grafana dashboard.
