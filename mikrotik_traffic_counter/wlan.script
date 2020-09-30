@@ -1,0 +1,8 @@
+:local wlanrx "wlan-rx"
+:local wlantx "wlan-tx"
+:local wlanrxbytes [/ip firewall mangle get [/ip firewall mangle find comment="$wlanrx"] bytes]
+:local wlantxbytes [/ip firewall mangle get [/ip firewall mangle find comment="$wlantx"] bytes]
+:log info ("Submitting traffic statistics")
+/tool fetch url=("http://192.168.30.30:8888/\?wlan-rx=$wlanrxbytes&wlan-tx=$wlantxbytes") mode=http keep-result=no
+/ip firewall mangle reset-counters [/ip firewall mangle find comment="$wlanrx"]
+/ip firewall mangle reset-counters [/ip firewall mangle find comment="$wlantx"]

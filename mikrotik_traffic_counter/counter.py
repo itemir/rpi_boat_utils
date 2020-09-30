@@ -33,7 +33,7 @@ host = 'localhost'
 port = 8086
 user = 'username'
 password = 'password'
-dbname = 'sensor_data'
+dbname = 'networkdata'
 
 try:
     from local_settings import *
@@ -48,19 +48,20 @@ class http_handler(BaseHTTPServer.BaseHTTPRequestHandler):
         ''' Respond to GET only '''
         if cli_options.verbose:
             print "Received HTTP request (%s)" % s.path
-        match = re.match(r'^/\?lte1-rx=(\d+)&lte1-tx=(\d+)&lte2-rx=(\d+)&lte2-tx=(\d+)$', s.path)
-        if match:
-            lte1_rx=int(match.group(1))
-            lte1_tx=int(match.group(2))
-            lte2_rx=int(match.group(3))
-            lte2_tx=int(match.group(4))
+        match_lte = re.match(r'^/\?lte1-rx=(\d+)&lte1-tx=(\d+)&lte2-rx=(\d+)&lte2-tx=(\d+)$', s.path)
+        match_wlan = re.match(r'^/\?wlan-rx=(\d+)&wlan-tx=(\d+)$', s.path)
+        if match_lte:
+            lte1_rx=int(match_lte.group(1))
+            lte1_tx=int(match_lte.group(2))
+            lte2_rx=int(match_lte.group(3))
+            lte2_tx=int(match_lte.group(4))
             if cli_options.verbose:
-                print "Submitting %d, %d, %d, %d" % (lte1_rx, lte1_tx, lte2_rx, lte2_tx)
+                print "Submitting LTE stats (%d, %d, %d, %d)" % (lte1_rx, lte1_tx, lte2_rx, lte2_tx)
 
             iso = datetime.datetime.now(pytz.timezone('US/Pacific')).isoformat()
             data = [
             {
-              "measurement": "internet_traffic",
+              "measurement": "lte_traffic",
                   "time": iso,
                   "fields": {
                       "lte1_rx" : lte1_rx,
@@ -77,11 +78,36 @@ class http_handler(BaseHTTPServer.BaseHTTPRequestHandler):
             s.send_response(200)
             s.send_header('Content-type', 'text/html')
             s.end_headers()
+        elif match_wlan:
+            wlan_rx=int(match_wlan.group(1))
+            wlan_tx=int(match_wlan.group(2))
+            if cli_options.verbose:
+                print "Submitting WLAN stats (%d, %d)" % (wlan_rx, wlan_tx)
+
+            iso = datetime.datetime.now(pytz.timezone('US/Pacific')).isoformat()
+            data = [
+            {
+              "measurement": "wlan_traffic",
+                  "time": iso,
+                  "fields": {
+                      "wlan_rx" : wlan_rx,
+                      "wlan_tx" : wlan_tx,
+                  }
+              }
+            ]
+            client = InfluxDBClient(host, port, user, password, dbname)
+            client.write_points(data)
+            client.close()
+
+            s.send_response(200)
+            s.send_header('Content-type', 'text/html')
+            s.end_headers()
         else:
             s.send_response(404)
             s.send_header('Content-type', 'text/html')
             s.end_headers()
             s.wfile.write('<h1>HTTP-404</h1>')
+
     def log_message(self, format, *args):
         ''' Silence stdout messages '''
         return
