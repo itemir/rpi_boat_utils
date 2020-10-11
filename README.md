@@ -1,8 +1,8 @@
 # Boat and Raspberry Pi Utilities
 
-This repository contains a collection of utilities and tools for Raspberry Pi. They are primarily for usage on a boat, for integrating marine electronics, sensors and marine protocols.
+This repository contains a collection of utilities and tools for Raspberry Pi. They are primarily for usage on a boat, for bringing in Internet, integrating marine electronics, sensors and marine protocols.
 
-That being said, some of the utilities are relevant for non-boat usage (like uart_control) and some of the utilities do not require to be run on a Raspberry Pi (like gpsd2nmea, aisd or aisplay). 
+That being said, some of the utilities are relevant for non-boat usage (like uart_control), some of the utilities do not require to be run on a Raspberry Pi (like gpsd2nmea, aisd or aisplay) and some have nothing to do with boats or Raspbbery Pi directly (like traffic_counter). This is a catch-all repository for all code/tools I developed while living aboard my boat.
 
 [uart_control](https://github.com/itemir/rpi_boat_utils/tree/master/uart_control)
 ---
@@ -12,7 +12,7 @@ Tool for configuring the UART on a Raspberry Pi.
 ---
 Daemon for translating gpsd messages to raw NMEA messages to be used in iNavX, iSailor etc.
 
-[Traffic Counter](https://github.com/itemir/rpi_boat_utils/tree/master/traffic_counter)
+[traffic_counter](https://github.com/itemir/rpi_boat_utils/tree/master/traffic_counter)
 ---
 Code and instructions for measuring traffic consumed on Mikrotik(RouterOS) and OpenWrt routers.
 
