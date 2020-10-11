@@ -1,0 +1,26 @@
+#!/bin/sh
+INTERFACE="wlan0"
+DATA_FILE="/root/interface_counter.data"
+SERVER="http://192.168.30.30:8888"
+
+ifconfig=$(/sbin/ifconfig $INTERFACE | grep "RX bytes")
+current_rx=$(echo $ifconfig | cut -f2 -d: | cut -f1 -d' ')
+current_tx=$(echo $ifconfig |  cut -f3 -d: | cut -f1 -d' ')
+
+if [ ! -f "$DATA_FILE" ]; then
+    echo $current_rx,$current_tx > $DATA_FILE
+    exit
+fi
+
+previous_values=$(cat $DATA_FILE)
+previous_rx=$(echo $previous_values | cut -f1 -d,)
+previous_tx=$(echo $previous_values | cut -f2 -d,)
+
+rx=$(expr $current_rx - $previous_rx)
+tx=$(expr $current_tx - $previous_tx)
+
+temp=$(/usr/bin/curl -f -s  "$SERVER/?wlan-rx=$rx&wlan-tx=$tx")
+exit_status=$?
+if [ $exit_status -eq 0 ]; then
+    echo $current_rx,$current_tx > $DATA_FILE
+fi

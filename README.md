@@ -12,9 +12,9 @@ Tool for configuring the UART on a Raspberry Pi.
 ---
 Daemon for translating gpsd messages to raw NMEA messages to be used in iNavX, iSailor etc.
 
-[Mikrotik Traffic Counter](https://github.com/itemir/rpi_boat_utils/tree/master/mikrotik_traffic_counter)
+[Traffic Counter](https://github.com/itemir/rpi_boat_utils/tree/master/traffic_counter)
 ---
-Code and instructions for measuring traffic consumed on Mikrotik routers.
+Code and instructions for measuring traffic consumed on Mikrotik(RouterOS) and OpenWrt routers.
 
 [monitoringd](https://github.com/itemir/rpi_boat_utils/tree/master/monitoringd)
 ---
