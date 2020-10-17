@@ -19,6 +19,16 @@ previous_tx=$(echo $previous_values | cut -f2 -d,)
 rx=$(expr $current_rx - $previous_rx)
 tx=$(expr $current_tx - $previous_tx)
 
+if [ $rx -lt 0 ]; then
+  rm $DATA_FILE
+  exit
+fi
+
+if [ $tx -lt 0 ]; then
+  rm $DATA_FILE
+  exit
+fi
+
 temp=$(/usr/bin/curl -f -s  "$SERVER/?wlan-rx=$rx&wlan-tx=$tx")
 exit_status=$?
 if [ $exit_status -eq 0 ]; then
