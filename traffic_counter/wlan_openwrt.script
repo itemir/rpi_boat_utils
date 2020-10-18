@@ -20,12 +20,12 @@ rx=$(expr $current_rx - $previous_rx)
 tx=$(expr $current_tx - $previous_tx)
 
 if [ $rx -lt 0 ]; then
-  rm $DATA_FILE
+  echo $current_rx,$current_tx > $DATA_FILE
   exit
 fi
 
 if [ $tx -lt 0 ]; then
-  rm $DATA_FILE
+  echo $current_rx,$current_tx > $DATA_FILE
   exit
 fi
 

@@ -2,7 +2,7 @@
 
 This repository contains a collection of utilities and tools for Raspberry Pi. They are primarily for usage on a boat, for bringing in Internet, integrating marine electronics, sensors and marine protocols.
 
-That being said, some of the utilities are relevant for non-boat usage (like uart_control), some of the utilities do not require to be run on a Raspberry Pi (like gpsd2nmea, aisd or aisplay) and some have nothing to do with boats or Raspbbery Pi directly (like traffic_counter). This is a catch-all repository for all code/tools I developed while living aboard my boat.
+That being said, some of the utilities are relevant for non-boat usage (like uart_control), some of the utilities do not require to be run on a Raspberry Pi (like gpsd2nmea, aisd or aisplay) and some have nothing to do with boats or Raspbbery Pi directly (like traffic_counter). This is a catch-all repository for auxiliary utilities I developed for my boat.
 
 [uart_control](https://github.com/itemir/rpi_boat_utils/tree/master/uart_control)
 ---
