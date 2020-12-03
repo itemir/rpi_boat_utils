@@ -40,8 +40,13 @@ is_pione() {
    fi
 }
 
+is_pifour() {
+   grep -q "^Revision\s*:\s*[ 123][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F]11[0-9a-fA-F]$" /proc/cpuinfo
+   return $?
+}
+
 is_pithree() {
-   grep -q "^Revision\s*:\s*[ 123][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F]08[0-9a-fA-F]$" /proc/cpuinfo
+   grep -q "^Revision\s*:\s*[ 123][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F]0[8d][0-9a-fA-F]$" /proc/cpuinfo
    return $?
 }
 
@@ -62,6 +67,8 @@ get_pi_type() {
       echo 2
    elif is_pithree; then
       echo 3
+   elif is_pifour; then
+      echo 4
    else
       echo 0
    fi
@@ -172,26 +179,44 @@ set_console() {
 }
 
 bluetooth_status() {
-  if ! is_pithree; then
-    echo "N/A"
-  else
+  if is_pifour; then
+    if grep -q -E "^dtoverlay=disable-bt" $CONFIG; then
+      echo "disabled"
+    else
+      echo "enabled"
+    fi
+  elif is_pithree; then
     if grep -q -E "^dtoverlay=pi3-disable-bt" $CONFIG; then
       echo "disabled"
     else
       echo "enabled"
     fi
+  else
+    echo "N/A"
   fi
 }
 
 set_bluetooth() {
   if [ $1 = "enable" ]; then
-    sed $CONFIG -i -e "s/^dtoverlay=pi3-disable-bt/#dtoverlay=pi3-disable-bt/"
+    if is_pithree; then
+      sed $CONFIG -i -e "s/^dtoverlay=pi3-disable-bt/#dtoverlay=pi3-disable-bt/"
+    else
+      sed $CONFIG -i -e "s/^dtoverlay=disable-bt/#dtoverlay=disable-bt/"
+    fi
     systemctl enable hciuart 
   elif [ $1 = "disable" ]; then
-    sed $CONFIG -i -e "s/^#dtoverlay=pi3-disable-bt/dtoverlay=pi3-disable-bt/"
-    if ! grep -q -E "^dtoverlay=pi3-disable-bt" $CONFIG; then
-      printf "# Comment the following line to enable Bluetooth\n" >> $CONFIG
-      printf "dtoverlay=pi3-disable-bt\n" >> $CONFIG
+    if is_pithree; then
+      sed $CONFIG -i -e "s/^#dtoverlay=pi3-disable-bt/dtoverlay=pi3-disable-bt/"
+      if ! grep -q -E "^dtoverlay=pi3-disable-bt" $CONFIG; then
+        printf "# Comment the following line to enable Bluetooth\n" >> $CONFIG
+        printf "dtoverlay=pi3-disable-bt\n" >> $CONFIG
+      fi
+    else
+      sed $CONFIG -i -e "s/^#dtoverlay=disable-bt/dtoverlay=disable-bt/"
+      if ! grep -q -E "^dtoverlay=disable-bt" $CONFIG; then
+        printf "# Comment the following line to enable Bluetooth\n" >> $CONFIG
+        printf "dtoverlay=disable-bt\n" >> $CONFIG
+      fi
     fi
     systemctl disable hciuart 
   fi
@@ -229,7 +254,7 @@ do
     set_uart enable
     printf "Disabling console on UART.\n"
     set_console disable
-    if is_pithree; then
+    if is_pithree || is_pifour; then
       printf "Disabling Bluetooth.\n"
       set_bluetooth disable
     else
@@ -245,7 +270,7 @@ do
     set_uart enable
     printf "Enabling console on UART.\n"
     set_console enable
-    if is_pithree; then
+    if is_pithree || is_pifour; then
       printf "Enabling Bluetooth.\n"
       set_bluetooth enable
     else
@@ -257,13 +282,15 @@ do
     exit 1
     ;;
   status)
+    pitype=$(get_pi_type)
     console=$(console_status)
     uart=$(uart_status)
     bluetooth=$(bluetooth_status)
 
-    printf "Console   : $console\n"
-    printf "UART      : $uart\n"
-    printf "Bluetooth : $bluetooth\n"
+    printf "Raspberry Pi : $pitype\n"
+    printf "Console      : $console\n"
+    printf "UART         : $uart\n"
+    printf "Bluetooth    : $bluetooth\n"
 
     if [ "$console" = disabled ] && \
        [ "$uart" = enabled ] && \
