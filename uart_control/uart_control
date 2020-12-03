@@ -69,8 +69,10 @@ get_pi_type() {
       echo 3
    elif is_pifour; then
       echo 4
-   else
+   elif is_pizero; then
       echo 0
+   else
+      echo "unknown"
    fi
 }
 
