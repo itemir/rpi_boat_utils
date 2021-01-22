@@ -31,8 +31,6 @@ from influxdb import InfluxDBClient
 
 host = 'localhost'
 port = 8086
-user = 'username'
-password = 'password'
 dbname = 'networkdata'
 
 try:
@@ -71,7 +69,8 @@ class http_handler(BaseHTTPServer.BaseHTTPRequestHandler):
                   }
               }
             ]
-            client = InfluxDBClient(host, port, user, password, dbname)
+            client = InfluxDBClient()
+	    client.switch_database(dbname)
             client.write_points(data)
             client.close()
 
@@ -95,7 +94,8 @@ class http_handler(BaseHTTPServer.BaseHTTPRequestHandler):
                   }
               }
             ]
-            client = InfluxDBClient(host, port, user, password, dbname)
+            client = InfluxDBClient()
+	    client.switch_database(dbname)
             client.write_points(data)
             client.close()
 
