@@ -1,6 +1,6 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 #
-# Copyright (c) 2017 Ilker Temir
+# Copyright (c) 2017-2021 Ilker Temir
 #
 # MIT License
 #
@@ -30,7 +30,7 @@ import sys
 import threading
 import time
 
-PORT = 1923
+PORT = 1920
 client_list = []
 
 class BoatSensor(object):
@@ -59,7 +59,7 @@ class BoatSensor(object):
         '''
         Called by individual plugins to emit messages
         '''
-	data = '{"updates":[{"$source":"sensord","values":%s}]}' % json.dumps(values)
+        data = '{"updates":[{"$source":"sensord","values":%s}]}' % json.dumps(values)
         self.sock.sendto(data.encode('utf-8'), ('127.0.0.1', PORT))
 
     def run(self):

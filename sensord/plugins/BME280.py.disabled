@@ -123,16 +123,16 @@ class BME280(object):
         self._device.readU8(BME280_REGISTER_DIG_H5) >> 4 & 0x0F)
 
         '''
-        print '0xE4 = {0:2x}'.format (self._device.readU8 (BME280_REGISTER_DIG_H4))
-        print '0xE5 = {0:2x}'.format (self._device.readU8 (BME280_REGISTER_DIG_H5))
-        print '0xE6 = {0:2x}'.format (self._device.readU8 (BME280_REGISTER_DIG_H6))
+        print ('0xE4 = {0:2x}'.format (self._device.readU8 (BME280_REGISTER_DIG_H4)))
+        print ('0xE5 = {0:2x}'.format (self._device.readU8 (BME280_REGISTER_DIG_H5)))
+        print ('0xE6 = {0:2x}'.format (self._device.readU8 (BME280_REGISTER_DIG_H6)))
 
-        print 'dig_H1 = {0:d}'.format (self.dig_H1)
-        print 'dig_H2 = {0:d}'.format (self.dig_H2)
-        print 'dig_H3 = {0:d}'.format (self.dig_H3)
-        print 'dig_H4 = {0:d}'.format (self.dig_H4)
-        print 'dig_H5 = {0:d}'.format (self.dig_H5)
-        print 'dig_H6 = {0:d}'.format (self.dig_H6)
+        print ('dig_H1 = {0:d}'.format (self.dig_H1))
+        print ('dig_H2 = {0:d}'.format (self.dig_H2))
+        print ('dig_H3 = {0:d}'.format (self.dig_H3))
+        print ('dig_H4 = {0:d}'.format (self.dig_H4))
+        print ('dig_H5 = {0:d}'.format (self.dig_H5))
+        print ('dig_H6 = {0:d}'.format (self.dig_H6))
         '''
 
     def read_raw_temp(self):
