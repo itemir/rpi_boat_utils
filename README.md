@@ -16,6 +16,10 @@ Daemon for translating gpsd messages to raw NMEA messages to be used in iNavX, i
 ---
 Code and instructions for measuring traffic consumed on Mikrotik(RouterOS) and OpenWrt routers.
 
+[dometic_to_voltage](https://github.com/itemir/rpi_boat_utils/tree/master/dometic_to_voltage)
+---
+Arduino code to turn dometic sensor readings into variable voltages for displays like Simarine Pico.
+
 [monitoringd](https://github.com/itemir/rpi_boat_utils/tree/master/monitoringd)
 ---
 Daemon for retrieving pressure, temperature and humidity from a BME280 based sensor and storing them in InfluxDB, for visualizing on a Grafana dashboard.
