@@ -8,7 +8,7 @@ It takes green, orange and red inputs on pins 2, 5 and 8 respectively and output
 
 This code should work different Arduino models but the easiest may be the Arduino Nano with [a shield like this](https://www.amazon.com/dp/B012EQSYE6).
 
-Here is the installation I have:
+Belowis the installation I have. Black, green, yellow and red wires go to the sensor; blue and brown wires go to positive and ground terminals of Simarine ST107 sensor.
 
 ![arduino](./arduino.jpg)
 
