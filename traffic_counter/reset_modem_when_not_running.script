@@ -1,0 +1,9 @@
+# Mikrotik devices tend to get stuck when LTE connection flaps
+# This script resets the interface when modem is not running
+:if ([/interface get lte1 running] = false) do={
+  :log error "LTE interface not running";
+  /system routerboard usb power-reset duration=10;
+  :log error "Resetted USB power";
+} else={
+  :log info "LTE interface running";
+}
