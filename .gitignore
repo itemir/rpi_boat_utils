@@ -1,3 +1,5 @@
 local_settings.py
 *.swp
 *.pyc
+*.json
+*.mbtiles

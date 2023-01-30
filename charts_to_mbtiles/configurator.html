@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<base target="_top">
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Chart2MBTiles Configuration Genrator</title>
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" integrity="sha256-kLaT2GOSpHechhsozzB+flnD+zUyjE2LlfWPgU04xyI=" crossorigin=""/>
+        <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js" integrity="sha256-WBkoXOwTeyKclOHuWtc+i2uENFpDZ9YPdf5Hf+D7ewM=" crossorigin=""></script>
+	<style>
+		html, body {
+			height: 100%;
+			margin: 0;
+		}
+	  	#map_container {
+      			position: relative;
+      			height: 100%;
+      			width: 100%;
+  		}
+  		#map {
+      			height: 100%;
+      			width: 100%;
+      			z-index: 1;
+  		}
+  		#map_control {
+      			position: absolute;
+      			bottom: 50px;
+			width: 100%;
+      			left: 0;
+			text-align: center;
+      			z-index: 99;
+  		}
+	</style>
+</head>
+<body>
+
+<div id='map_container'>
+	<div id='map'></div>
+	<div id='map_control'>
+		<button id='download' onclick='undo()'>Undo</button>
+		<button id='download' onclick='downloadConfiguration()'>Download Configuration</button>
+	</div>
+</div>
+<script>
+	var cornerCoords;
+	var boxes = [];
+	var lastBox;
+	const map = L.map('map').setView([0, 0], 2);
+	const tiles = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+		maxZoom: 19,
+		attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+	}).addTo(map);
+
+
+	function downloadConfiguration() {
+		configuration = {
+                        "metadata": {
+				"name": "INSERT NAME",
+				"format": "png",
+		                "bounds": "-180.0,-85,180,85",
+               			"center": "-122.1906,37.7599,11",
+                		"minzoom": 1,
+                		"maxzoom": 16,
+				"description": "Created by Charts2MBTiles utility"
+                        },
+			"tile_server": "INSERT YOUR TILE SERVER ({z}, {x}, {y})",
+			"minimum_zoom": 1,
+			"maximum_zoom": 17,
+			"boxes": boxes,
+			"additional_headers": {},
+			"output_file": "output.mbtiles"
+		}
+		var bb = new Blob([JSON.stringify(configuration)], { type: 'text/json' });
+		var a = document.createElement('a');
+		a.download = 'configuration.json';
+		a.href = window.URL.createObjectURL(bb);
+		a.click();
+	}
+	function undo() {
+		if (lastBox) {
+			lastBox.remove();
+		}
+	}
+	function onMapClick(e) {
+		if (!cornerCoords) {
+			cornerCoords = e.latlng;
+		} else {
+			let bounds = [cornerCoords, e.latlng];
+			lastBox=L.rectangle(bounds, {color: "#ff7800", weight: 1})
+			lastBox.addTo(map);
+			boxes.push(bounds);
+			cornerCoords = null;
+		}	
+	}
+	map.on('click', onMapClick);
+</script>
+</body>
+</html>
+
