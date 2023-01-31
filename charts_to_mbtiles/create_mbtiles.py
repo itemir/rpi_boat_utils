@@ -5,6 +5,7 @@ import sys
 import math
 import requests
 import json
+import hashlib
 
 def deg2num(lat_deg, lon_deg, zoom):
     lat_rad = math.radians(lat_deg)
@@ -27,24 +28,36 @@ zoom_end = configuration['maximum_zoom']
 headers = configuration['additional_headers']
 mbtiles_file = configuration['output_file']
 
-tiles = []
-print('Processing %s boxes' % len(boxes))
-for item in boxes:
-    top_left = item[0]
-    bottom_right = item[1]
-    lat_start = top_left['lat']
-    lng_start = top_left['lng']
-    lat_end = bottom_right['lat']
-    lng_end = bottom_right['lng']
-    for zoom in range(zoom_start, zoom_end+1):
-        (x_start, y_start) = deg2num(lat_start, lng_start, zoom)
-        (x_end, y_end) = deg2num(lat_end, lng_end, zoom)
-        for x in range(x_start, x_end+1):
-            for y in range(y_start, y_end+1):
-                tileset = TileCoordinate(zoom, x, y)
-                if tileset not in tiles:
-                    tiles.append(tileset)
-
+unique_key = json.dumps([zoom_start, zoom_end, boxes]).encode('utf-8')
+boxes_tiles_filename = '%s.boxes' %  hashlib.md5(unique_key).hexdigest()
+print('Checking if previous box file exists:', boxes_tiles_filename)
+if os.path.exists(boxes_tiles_filename):
+    print('Preconfigured tiles exist, loading from %s' % boxes_tiles_filename)
+    with open(boxes_tiles_filename) as boxes_tiles_file:
+        tiles = json.load(boxes_tiles_file)
+else:
+    tiles = []
+    print('Processing %s boxes' % len(boxes))
+    box_counter = 0
+    for item in boxes:
+        box_counter = box_counter + 1
+        print('Processing box', box_counter)
+        top_left = item[0]
+        bottom_right = item[1]
+        lat_start = top_left['lat']
+        lng_start = top_left['lng']
+        lat_end = bottom_right['lat']
+        lng_end = bottom_right['lng']
+        for zoom in range(zoom_start, zoom_end+1):
+            (x_start, y_start) = deg2num(lat_start, lng_start, zoom)
+            (x_end, y_end) = deg2num(lat_end, lng_end, zoom)
+            for x in range(x_start, x_end+1):
+                for y in range(y_start, y_end+1):
+                    tileset = TileCoordinate(zoom, x, y)
+                    if tileset not in tiles:
+                        tiles.append(tileset)
+    with open(boxes_tiles_filename, 'w') as boxes_tiles_file:
+        boxes_tiles_file.write(json.dumps(tiles))
 
 if not os.path.exists(mbtiles_file):
     print('Creating new MBTiles file:', mbtiles_file)
@@ -73,12 +86,15 @@ with MBtiles(mbtiles_file, mode='r+') as mbtiles:
              url = url.replace('{x}', str(x))
              url = url.replace('{y}', str(y))
 
-             response = requests.get(url, headers=headers)
-             if response.status_code == 200:
-                  mbtiles.write_tile(z=z, x=x, y=row, data=response.content)
-                  print ('Inserted as %s, %s, %s' % (z, x, row))
-             else:
-                  print ('Download error')
+             try:
+                 response = requests.get(url, headers=headers, timeout=5)
+                 if response.status_code == 200:
+                      mbtiles.write_tile(z=z, x=x, y=row, data=response.content)
+                      print ('Inserted as %s, %s, %s' % (z, x, row))
+                 else:
+                      print ('Download error', response.status_code, response.content)
+             except (requests.exceptions.ReadTimeout, requests.exceptions.ConnectionError):
+                 print ('Read timeout or connection reset')
          else:
              print('Tile (%s, %s, %s) was already downloaded' % (z, x, y))
 
