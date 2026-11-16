@@ -34,7 +34,7 @@ clients_lock = threading.Lock()
 
 def listener(client, address):
     if cli_options.verbose:
-        print "New connection %s." % str(address)
+        print ("New connection %s.") % str(address)
     addresses[client.fileno()] = address
     with clients_lock:
         clients.add(client)
@@ -51,11 +51,11 @@ def read_ais_messages(gpsd):
         try:
             ais_message = gpsd.recv(2048)
         except (IOError, socket.error):
-            print 'Error reading from gpsd'
+            print ('Error reading from gpsd')
             sys.exit(1) 
         if cli_options.verbose:
             log = ais_message.strip()
-            print 'Received NMEA sentence: %s' % log
+            print ('Received NMEA sentence: %s') % log
         clients_to_remove = set()
         clients_lock.acquire()
         for client in clients:
@@ -65,7 +65,7 @@ def read_ais_messages(gpsd):
                 clients_to_remove.add(client)
         for client in clients_to_remove:
             if cli_options.verbose:
-                print "Connection dropped %s." % str(addresses[client.fileno()])
+                print ("Connection dropped %s.") % str(addresses[client.fileno()])
             clients.remove(client)
         clients_lock.release()
 
@@ -94,9 +94,9 @@ cli_options = parser.parse_args()
 try:
     gpsd = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     gpsd.connect((cli_options.gpsd_server, cli_options.gpsd_port))
-    gpsd.send('?WATCH={"enable":true,"json":false,"nmea":true,"raw":0,"scaled":false,"timing":false,"split24":false,"pps":false}')
+    gpsd.send('?WATCH={"enable":true,"json":false,"nmea":true,"raw":0,"scaled":false,"timing":false,"split24":false,"pps":false}'.encode("utf-8"))
 except (IOError, socket.error):
-    print 'Error opening connection to %s:%s' % (cli_options.gpsd_server, cli_options.gpsd_port)
+    print ('Error opening connection to %s:%s') % (cli_options.gpsd_server, cli_options.gpsd_port)
     sys.exit(1)
 
 s = socket.socket()
